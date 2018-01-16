@@ -28,4 +28,4 @@ Although the GitHub markdown viewer removes the inline data url, so it's of no u
 
 ### Install
 
-Just clone the repo in your Visual Studio Code's `Packages` directory.
+Just clone the repo in your `$HOME/.vscode/extensions` directory.
