@@ -10,7 +10,7 @@ You have a markdown file with an image link like
 
 Your file is no longer self contained.
 
-Run the "Image URL to Data" (from the command palette) on the selected url
+Run the "URL To Image" (from the command palette) on the selected url
 and it will be replaced by something like:
 
 ``
