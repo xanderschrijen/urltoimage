@@ -19,17 +19,17 @@ import { URL } from 'url';
 export function activate(context: vscode.ExtensionContext) {
 
    let disposable = vscode.commands.registerCommand('extension.urlToImage', () => {
+       
+       let editor = Window.activeTextEditor;
 
-        if (!vscode.window.activeTextEditor) {
-            vscode.window.showInformationMessage('Open a file first to manipulate text selections');
+        if (!editor) {
+            Window.showInformationMessage('Open a file first to manipulate text selections');
             return;
         }
 
-        let e = Window.activeTextEditor;
-        let d = e.document;
-        let selections = e.selections;
-
-        urlToImage(e, d, selections);
+        for (let selection of editor.selections) {
+            urlToImage(editor, selection);
+        }
     });
 
     context.subscriptions.push(disposable);
@@ -38,31 +38,28 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
 }
 
-function urlToImage(e: TextEditor, d: TextDocument, selections: Selection[]) {
-    for (var x = 0; x < selections.length; x++) {
-        let sel = selections[x];
-        let urlString: string = d.getText(new Range(sel.start, sel.end));
-        let url: URL = new URL(urlString);
-        if (url.protocol == 'http:') {
-            http.get(url, result => handleMessage(result, e, sel));
-        } else if (url.protocol == 'https:') {
-            https.get(url, result => handleMessage(result, e, sel));
-        } else {
-            vscode.window.showErrorMessage("Unknown URL protocol: " + url.protocol);
-        }
+function urlToImage(editor: TextEditor, selection: Selection) {
+    let urlString: string = editor.document.getText(new Range(selection.start, selection.end));
+    let url: URL = new URL(urlString);
+    if (url.protocol == 'http:') {
+        http.get(url, result => handleMessage(result, editor, selection));
+    } else if (url.protocol == 'https:') {
+        https.get(url, result => handleMessage(result, editor, selection));
+    } else {
+        Window.showErrorMessage("Unknown URL protocol: " + url.protocol);
     }
 }
 
-function handleMessage(msg: IncomingMessage, e: TextEditor, sel: Selection) {
+function handleMessage(msg: IncomingMessage, editor: TextEditor, selection: Selection) {
     let contentType = msg.headers["content-type"];
-    let data = 'data:' + contentType + ";base64,";
+    let data = `data:${contentType};base64,`;
     msg.setEncoding("base64");
     msg.on("data", chunk => {
         data += chunk;
     });
     msg.on("end", () => {
-        e.edit(edit => {
-            edit.replace(sel, data);
+        editor.edit(edit => {
+            edit.replace(selection, data);
         });
     });
 }
